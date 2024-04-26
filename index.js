@@ -1,88 +1,58 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: sandybrown;
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+const resultContainer = document.getElementById('resultContainer');
+
+searchButton.addEventListener('click', searchMeals);
+
+function searchMeals() {
+  const searchTerm = searchInput.value.trim();
+  if (searchTerm) {
+    resultContainer.innerHTML = ''; // Clear previous results
+    fetchMeals(searchTerm);
+  }
 }
 
-header {
-  background-color:beige;
-  color:coral;
-  padding: 20px;
-  text-align: center;
+function fetchMeals(searchTerm) {
+  const apiURL = `https://www.themealdb.com/api/json/v1/1/search.php?s=${searchTerm}`;
+
+  fetch(apiURL)
+    .then(response => response.json())
+    .then(data => {
+      const meals = data.meals;
+      if (meals) {
+        displayMeals(meals);
+      } else {
+        resultContainer.innerHTML = '<p>No meals found.</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      resultContainer.innerHTML = '<p>An error occurred while fetching meals.</p>';
+    });
 }
 
-main {
-  padding: 20px;
-}
+function displayMeals(meals) {
+  let mealCards = '';
+  const maxResults = 5;
 
-.search-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-#searchInput {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
-}
-
-#searchButton {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #333;
-  color: #fff;
-  border: none;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-}
-
-.meal-card {
-  background-color: sandybrown;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 20px;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.meal-card img {
-  max-width: 200px;
-  height: auto;
-  margin-bottom: 10px;
-}
-
-.show-all-btn {
-  display: block;
-  margin: 20px auto;
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #333;
-  color: white
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-footer {
-  background-color: #333;
-  color: white;
-  padding: 20px;
-  text-align: center;
-}
-
-@media (max-width: 768px) {
-  .meal-card {
-    flex-direction: row;
-    align-items: flex-start;
+  for (let i = 0; i < Math.min(meals.length, maxResults); i++) {
+    const meal = meals[i];
+    mealCards += `
+      <div class="meal-card">
+        <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+        <h3>${meal.idMeal} - ${meal.strMeal}</h3>
+        <p>${meal.strInstructions}</p>
+      </div>
+    `;
   }
 
-  .meal-card img {
-    max-width: 100px;
-    margin-right: 10px;
+  resultContainer.innerHTML = mealCards;
+
+  if (meals.length > maxResults) {
+    const showAllButton = document.createElement('button');
+    showAllButton.textContent = 'Show All';
+    showAllButton.classList.add('show-all-btn');
+    showAllButton.addEventListener('click', () => displayMeals(meals));
+    resultContainer.appendChild(showAllButton);
   }
 }
